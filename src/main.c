@@ -1366,7 +1366,7 @@ static PyObject* emb_set_life(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1407,7 +1407,7 @@ static PyObject* emb_set_type(PyObject *self, PyObject *args, PyObject *keywds)
     int i = -1,life,j=-1,x=-1,y=-1;
     char *name = "";
     char *type = "";
-    char *kwlist[] = {"setto", "settoint", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "settoint", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "|sIsIII:set_type",kwlist ,&type,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1448,7 +1448,7 @@ static PyObject* emb_set_temp(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1488,7 +1488,7 @@ static PyObject* emb_set_tmp(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1529,7 +1529,7 @@ static PyObject* emb_set_x(PyObject *self, PyObject *args, PyObject *keywds)
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
     char *type = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1569,7 +1569,7 @@ static PyObject* emb_set_y(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
     if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
@@ -1610,8 +1610,8 @@ static PyObject* emb_set_ctype(PyObject *self, PyObject *args, PyObject *keywds)
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
     char *type = "";
-    char *kwlist[] = {"setto", "settoint", "from", "i", "x", "y", NULL};
-    if(!PyArg_ParseTupleAndKeywords(args, keywds, "s|IsIII:set_type",kwlist ,&type, &life, &name,&i,&x,&y))
+    char *kwlist[] = {"setto", "settoint", "setfrom", "i", "x", "y", NULL};
+    if(!PyArg_ParseTupleAndKeywords(args, keywds, "|sIsIII:set_type",kwlist ,&type, &life, &name,&i,&x,&y))
         return NULL;
     //
     if(strcmp(name,"")==0 && x==-1 && y==-1 && i==-1)
@@ -1652,8 +1652,8 @@ static PyObject* emb_set_vx(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
-    if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
+    if(!PyArg_ParseTupleAndKeywords(args, keywds, "f|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
     if(strcmp(name,"")==0 && x==-1 && y==-1 && i==-1)
@@ -1692,8 +1692,8 @@ static PyObject* emb_set_vy(PyObject *self, PyObject *args, PyObject *keywds)
 {
     int i = -1,life,j,x=-1,y=-1;
     char *name = "";
-    char *kwlist[] = {"setto", "from", "i", "x", "y", NULL};
-    if(!PyArg_ParseTupleAndKeywords(args, keywds, "I|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
+    char *kwlist[] = {"setto", "setfrom", "i", "x", "y", NULL};
+    if(!PyArg_ParseTupleAndKeywords(args, keywds, "f|sIII:set_type",kwlist ,&life,&name,&i,&x,&y))
         return NULL;
     //
     if(strcmp(name,"")==0 && x==-1 && y==-1 && i==-1)
