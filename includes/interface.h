@@ -82,6 +82,14 @@ struct ui_edit
 };
 typedef struct ui_edit ui_edit;
 
+struct ui_copytext
+{
+	int x, y, width, height;
+	char text[256];
+	int state, hover;
+};
+typedef struct ui_copytext ui_copytext;
+
 struct save_info
 {
 	char *title;
@@ -171,11 +179,17 @@ void ui_checkbox_draw(pixel *vid_buf, ui_checkbox *ed);
 
 void ui_checkbox_process(int mx, int my, int mb, int mbq, ui_checkbox *ed);
 
+void ui_copytext_draw(pixel *vid_buf, ui_copytext *ed);
+
+void ui_copytext_process(int mx, int my, int mb, int mbq, ui_copytext *ed);
+
 void draw_svf_ui(pixel *vid_buf);
 
 void error_ui(pixel *vid_buf, int err, char *txt);
 
 void info_ui(pixel *vid_buf, char *top, char *txt);
+
+void copytext_ui(pixel *vid_buf, char *top, char *txt, char *copytxt);
 
 void info_box(pixel *vid_buf, char *msg);
 
@@ -191,7 +205,7 @@ int save_name_ui(pixel *vid_buf);
 
 void menu_ui(pixel *vid_buf, int i, int *sl, int *sr);
 
-void menu_ui_v3(pixel *vid_buf, int i, int *sl, int *sr, int b, int bq, int mx, int my);
+void menu_ui_v3(pixel *vid_buf, int i, int *sl, int *sr, int *dae, int b, int bq, int mx, int my);
 
 int sdl_poll(void);
 

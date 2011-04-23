@@ -868,7 +868,7 @@ int drawtextwrap(pixel *vid, int x, int y, int w, const char *s, int r, int g, i
 	while (*s)
 	{
 		wordlen = strcspn(s," .,!?\n");
-		charspace = textwidthx(s, w-(x-cw));
+		charspace = textwidthx((char *)s, w-(x-cw));
 		if (charspace<wordlen && wordlen && w-(x-cw)<w/3)
 		{
 			x = sx;
@@ -1104,6 +1104,45 @@ int textposxy(char *s, int width, int w, int h)
 	}
 	return n;
 }
+int textwrapheight(char *s, int width)
+{
+	int x=0, height=FONT_H+2, cw;
+	int wordlen;
+	int charspace;
+	while (*s)
+	{
+		wordlen = strcspn(s," .,!?\n");
+		charspace = textwidthx(s, width-x);
+		if (charspace<wordlen && wordlen && width-x<width/3)
+		{
+			x = 0;
+			height += FONT_H+2;
+		}
+		for (; *s && --wordlen>=-1; s++)
+		{
+			if (*s == '\n')
+			{
+				x = 0;
+				height += FONT_H+2;
+			}
+			else if (*s == '\b')
+			{
+				s++;
+			}
+			else
+			{
+				cw = font_data[font_ptrs[(int)(*(unsigned char *)s)]];
+				if (x+cw>=width)
+				{
+					x = 0;
+					height += FONT_H+2;
+				}
+				x += cw;
+			}
+		}
+	}
+	return height;
+}
 
 //the most used function for drawing a pixel, because it has OpenGL support, which is not fully implemented.
 #if defined(WIN32) && !defined(__GNUC__)
@@ -1214,6 +1253,30 @@ void draw_air(pixel *vid)
 				for (i=0; i<CELL; i++)
 					vid[(x*CELL+i) + (y*CELL+j)*(XRES+BARSIZE)] = c;
 		}
+}
+
+void draw_grav(pixel *vid)
+{
+	int x, y, i;
+	float nx, ny, dist;
+
+	for (y=0; y<YRES/CELL; y++)
+	{
+		for (x=0; x<XRES/CELL; x++)
+		{
+			if(fabsf(gravx[y][x]) <= 0.001f && fabsf(gravy[y][x]) <= 0.001f)
+				continue;
+			nx = x*CELL;
+			ny = y*CELL;
+			dist = fabsf(gravx[y][x])+fabsf(gravy[y][x]);
+			for(i = 0; i < 4; i++)
+			{
+				nx -= gravx[y][x]*0.5f;
+				ny -= gravy[y][x]*0.5f;
+				addpixel(vid, (int)(nx+0.5f), (int)(ny+0.5f), 255, 255, 255, (int)(dist*20.0f));
+			}
+		}
+	}
 }
 
 void draw_line(pixel *vid, int x1, int y1, int x2, int y2, int r, int g, int b, int a)  //Draws a line
@@ -1593,7 +1656,7 @@ void draw_parts(pixel *vid)
 							fr = restrict_flt(parts[i].temp-(275.13f+32.0f), 0, 128)/50.0f;
 							fg = restrict_flt(parts[i].ctype, 0, 128)/50.0f;
 							fb = restrict_flt(parts[i].tmp, 0, 128)/50.0f;
-					
+
 							cr = restrict_flt(64.0f+parts[i].temp-(275.13f+32.0f), 0, 255);
 							cg = restrict_flt(64.0f+parts[i].ctype, 0, 255);
 							cb = restrict_flt(64.0f+parts[i].tmp, 0, 255);
@@ -1769,45 +1832,45 @@ void draw_parts(pixel *vid)
 					blendpixel(vid, nx, ny, cr, cg, cb, 255);
 
 				}
-				else if(t==PT_LOTE)//colors for life states
+				else if (t==PT_LOTE)//colors for life states
 				{
-					if(parts[i].tmp==2)
+					if (parts[i].tmp==2)
 						blendpixel(vid, nx, ny, 255, 128, 0, 255);
-					else if(parts[i].tmp==1)
+					else if (parts[i].tmp==1)
 						blendpixel(vid, nx, ny, 255, 255, 0, 255);
 					else
 						blendpixel(vid, nx, ny, 255, 0, 0, 255);
 				}
-				else if(t==PT_FRG2)//colors for life states
+				else if (t==PT_FRG2)//colors for life states
 				{
-					if(parts[i].tmp==2)
+					if (parts[i].tmp==2)
 						blendpixel(vid, nx, ny, 0, 100, 50, 255);
 					else
 						blendpixel(vid, nx, ny, 0, 255, 90, 255);
 				}
-				else if(t==PT_STAR)//colors for life states
+				else if (t==PT_STAR)//colors for life states
 				{
-					if(parts[i].tmp==4)
+					if (parts[i].tmp==4)
 						blendpixel(vid, nx, ny, 0, 0, 128, 255);
-					else if(parts[i].tmp==3)
+					else if (parts[i].tmp==3)
 						blendpixel(vid, nx, ny, 0, 0, 150, 255);
-					else if(parts[i].tmp==2)
+					else if (parts[i].tmp==2)
 						blendpixel(vid, nx, ny, 0, 0, 190, 255);
-					else if(parts[i].tmp==1)
+					else if (parts[i].tmp==1)
 						blendpixel(vid, nx, ny, 0, 0, 230, 255);
 					else
 						blendpixel(vid, nx, ny, 0, 0, 70, 255);
 				}
-				else if(t==PT_FROG)//colors for life states
+				else if (t==PT_FROG)//colors for life states
 				{
-					if(parts[i].tmp==2)
+					if (parts[i].tmp==2)
 						blendpixel(vid, nx, ny, 0, 100, 0, 255);
 					else
 						blendpixel(vid, nx, ny, 0, 255, 0, 255);
 				}
-				else if(t==PT_BRAN)//colors for life states
+				else if (t==PT_BRAN)//colors for life states
 				{
-					if(parts[i].tmp==1)
+					if (parts[i].tmp==1)
 						blendpixel(vid, nx, ny, 150, 150, 0, 255);
 					else
 						blendpixel(vid, nx, ny, 255, 255, 0, 255);
@@ -1946,21 +2009,23 @@ void draw_parts(pixel *vid)
 					float drad = 0.0f;
 					float ddist = 0.0f;
 					orbitalparts_get(parts[i].life, parts[i].ctype, orbd, orbl);
-					for(r = 0; r < 4; r++){
+					for (r = 0; r < 4; r++) {
 						ddist = ((float)orbd[r])/16.0f;
 						drad = (M_PI * ((float)orbl[r]) / 180.0f)*1.41f;
 						nxo = ddist*cos(drad);
 						nyo = ddist*sin(drad);
-						addpixel(vid, nx+nxo, ny+nyo, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 255-orbd[r]);
-						if(cmode == CM_FIRE){
-							fire_rv = fire_r[(ny+nyo)/CELL][(nx+nxo)/CELL];
-							fire_rv += (255-orbd[r])/32;
-							if(fire_rv>255) fire_rv = 255;
-							fire_r[(ny+nyo)/CELL][(nx+nxo)/CELL] = fire_rv;
+						if (ny+nyo>0 && ny+nyo<YRES && nx+nxo>0 && nx+nxo<XRES) {
+							addpixel(vid, nx+nxo, ny+nyo, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 255-orbd[r]);
+							if (cmode == CM_FIRE && r == 1) {
+								fire_rv = fire_r[(ny+nyo)/CELL][(nx+nxo)/CELL];
+								fire_rv += 1;
+								if (fire_rv>255) fire_rv = 255;
+								fire_r[(ny+nyo)/CELL][(nx+nxo)/CELL] = fire_rv;
+							}
 						}
 						addpixel(vid, nx, ny, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 200);
 					}
-					if(DEBUG_MODE){//draw lines connecting portals
+					if (DEBUG_MODE) {//draw lines connecting portals
 						blendpixel(vid,nx,ny, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors),255);
 						if (mousex==(nx) && mousey==(ny))
 						{
@@ -1983,21 +2048,23 @@ void draw_parts(pixel *vid)
 					float drad = 0.0f;
 					float ddist = 0.0f;
 					orbitalparts_get(parts[i].life, parts[i].ctype, orbd, orbl);
-					for(r = 0; r < 4; r++){
+					for (r = 0; r < 4; r++) {
 						ddist = ((float)orbd[r])/16.0f;
 						drad = (M_PI * ((float)orbl[r]) / 180.0f)*1.41f;
 						nxo = ddist*cos(drad);
 						nyo = ddist*sin(drad);
-						addpixel(vid, nx+nxo, ny+nyo, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 255-orbd[r]);
-						if(cmode == CM_FIRE){
-							fire_bv = fire_b[(ny+nyo)/CELL][(nx+nxo)/CELL];
-							fire_bv += (255-orbd[r])/32;
-							if(fire_bv>255) fire_bv = 255;
-							fire_b[(ny+nyo)/CELL][(nx+nxo)/CELL] = fire_bv;
+						if (ny+nyo>0 && ny+nyo<YRES && nx+nxo>0 && nx+nxo<XRES) {
+							addpixel(vid, nx+nxo, ny+nyo, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 255-orbd[r]);
+							if (cmode == CM_FIRE && r == 1) {
+								fire_bv = fire_b[(ny+nyo)/CELL][(nx+nxo)/CELL];
+								fire_bv += 1;
+								if (fire_bv>255) fire_bv = 255;
+								fire_b[(ny+nyo)/CELL][(nx+nxo)/CELL] = fire_bv;
+							}
 						}
 						addpixel(vid, nx, ny, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors), 200);
 					}
-					if(DEBUG_MODE){//draw lines connecting portals
+					if (DEBUG_MODE) {//draw lines connecting portals
 						blendpixel(vid,nx,ny, PIXR(ptypes[t].pcolors), PIXG(ptypes[t].pcolors), PIXB(ptypes[t].pcolors),255);
 						if (mousex==(nx) && mousey==(ny))
 						{
@@ -2012,7 +2079,7 @@ void draw_parts(pixel *vid)
 						}
 					}
 				}
-				else if ((t==PT_BIZR||t==PT_BIZRG)&&parts[i].ctype)
+				else if ((t==PT_BIZR||t==PT_BIZRG||t==PT_BIZRS)&&parts[i].ctype)
 				{
 					cg = 0;
 					cb = 0;
@@ -2439,11 +2506,11 @@ void draw_parts(pixel *vid)
 					fr = restrict_flt(parts[i].temp-(275.13f+32.0f), 0, 128)/50.0f;
 					fg = restrict_flt(parts[i].ctype, 0, 128)/50.0f;
 					fb = restrict_flt(parts[i].tmp, 0, 128)/50.0f;
-					
+
 					cr = restrict_flt(64.0f+parts[i].temp-(275.13f+32.0f), 0, 255);
 					cg = restrict_flt(64.0f+parts[i].ctype, 0, 255);
 					cb = restrict_flt(64.0f+parts[i].tmp, 0, 255);
-					
+
 					vid[ny*(XRES+BARSIZE)+nx] = PIXRGB(cr, cg, cb);
 					if (cmode == CM_FIRE||cmode==CM_BLOB || cmode==CM_FANCY)
 					{
@@ -2473,7 +2540,7 @@ void draw_parts(pixel *vid)
 				}
 				else if (t==PT_LCRY)
 				{
-					uint8 GR = 0x50+(parts[i].life*10);
+					uint8 GR = 0x50+((parts[i].life>10?10:parts[i].life)*10);
 					vid[ny*(XRES+BARSIZE)+nx] = PIXRGB(GR, GR, GR);
 					if (cmode == CM_BLOB) {
 						blendpixel(vid, nx+1, ny, GR, GR, GR, 223);
@@ -2489,7 +2556,7 @@ void draw_parts(pixel *vid)
 				}
 				else if (t==PT_PCLN)
 				{
-					uint8 GR = 0x3B+(parts[i].life*19);
+					uint8 GR = 0x3B+((parts[i].life>10?10:parts[i].life)*19);
 					vid[ny*(XRES+BARSIZE)+nx] = PIXRGB(GR, GR, 10);
 					if (cmode == CM_BLOB) {
 						blendpixel(vid, nx+1, ny, GR, GR, 10, 223);
@@ -2505,7 +2572,7 @@ void draw_parts(pixel *vid)
 				}
 				else if (t==PT_HSWC)
 				{
-					uint8 GR = 0x3B+(parts[i].life*19);
+					uint8 GR = 0x3B+((parts[i].life>10?10:parts[i].life)*19);
 					vid[ny*(XRES+BARSIZE)+nx] = PIXRGB(GR, 10, 10);
 					if (cmode == CM_BLOB) {
 						blendpixel(vid, nx+1, ny, GR, 10, 10, 223);
@@ -2521,7 +2588,7 @@ void draw_parts(pixel *vid)
 				}
 				else if (t==PT_PUMP)
 				{
-					uint8 GR = 0x3B+(parts[i].life*19);
+					uint8 GR = 0x3B+((parts[i].life>10?10:parts[i].life)*19);
 					vid[ny*(XRES+BARSIZE)+nx] = PIXRGB(10, 10, GR);
 					if (cmode == CM_BLOB) {
 						blendpixel(vid, nx+1, ny, 10, 10, GR, 223);
@@ -2668,7 +2735,7 @@ void draw_parts(pixel *vid)
 							blendpixel(vid, nx-1, ny, cr, cg, cb, (gradv*2)>255?255:(gradv*2) );
 							blendpixel(vid, nx, ny+1, cr, cg, cb, (gradv*2)>255?255:(gradv*2) );
 							blendpixel(vid, nx, ny-1, cr, cg, cb, (gradv*2)>255?255:(gradv*2) );
-							if(gradv>255) gradv=255;
+							if (gradv>255) gradv=255;
 							blendpixel(vid, nx+1, ny-1, cr, cg, cb, gradv);
 							blendpixel(vid, nx-1, ny-1, cr, cg, cb, gradv);
 							blendpixel(vid, nx+1, ny+1, cr, cg, cb, gradv);
@@ -2996,7 +3063,7 @@ void draw_wavelengths(pixel *vid, int x, int y, int h, int wl)
 	int i,cr,cg,cb,j;
 	int tmp;
 	fillrect(vid,x-1,y-1,30+1,h+1,64,64,64,255); // coords -1 size +1 to work around bug in fillrect - TODO: fix fillrect
-	for (i=0;i<30;i++)
+	for (i=0; i<30; i++)
 	{
 		if ((wl>>i)&1)
 		{
@@ -3016,7 +3083,7 @@ void draw_wavelengths(pixel *vid, int x, int y, int h, int wl)
 			cr *= tmp;
 			cg *= tmp;
 			cb *= tmp;
-			for (j=0;j<h;j++) blendpixel(vid,x+29-i,y+j,cr>255?255:cr,cg>255?255:cg,cb>255?255:cb,255);
+			for (j=0; j<h; j++) blendpixel(vid,x+29-i,y+j,cr>255?255:cr,cg>255?255:cg,cb>255?255:cb,255);
 		}
 	}
 }
@@ -3047,14 +3114,14 @@ void render_signs(pixel *vid_buf)
 				drawtext(vid_buf, x+3, y+3, buff, 255, 255, 255, 255);
 			}
 
-			if(sregexp(signs[i].text, "^{c:[0-9]*|.*}$")==0)
+			if (sregexp(signs[i].text, "^{c:[0-9]*|.*}$")==0)
 			{
 				int sldr, startm;
 				memset(buff, 0, sizeof(buff));
-				for(sldr=3; signs[i].text[sldr-1] != '|'; sldr++)
+				for (sldr=3; signs[i].text[sldr-1] != '|'; sldr++)
 					startm = sldr + 1;
 				sldr = startm;
-				while(signs[i].text[sldr] != '}')
+				while (signs[i].text[sldr] != '}')
 				{
 					buff[sldr - startm] = signs[i].text[sldr];
 					sldr++;
@@ -3063,7 +3130,7 @@ void render_signs(pixel *vid_buf)
 			}
 
 			//Usual text
-			if(strcmp(signs[i].text, "{p}") && strcmp(signs[i].text, "{t}") && sregexp(signs[i].text, "^{c:[0-9]*|.*}$"))
+			if (strcmp(signs[i].text, "{p}") && strcmp(signs[i].text, "{t}") && sregexp(signs[i].text, "^{c:[0-9]*|.*}$"))
 				drawtext(vid_buf, x+3, y+3, signs[i].text, 255, 255, 255, 255);
 
 			x = signs[i].x;

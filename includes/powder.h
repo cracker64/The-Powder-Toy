@@ -198,7 +198,8 @@
 #define PT_FROG 145
 #define PT_BRAN 146
 #define PT_WIND 147
-#define PT_NUM  148
+#define PT_H2   148
+#define PT_NUM  149
 
 #define R_TEMP 22
 #define MAX_TEMP 9999
@@ -298,6 +299,8 @@ int update_WATR(UPDATE_FUNC_ARGS);
 int update_WIFI(UPDATE_FUNC_ARGS);
 int update_WTRV(UPDATE_FUNC_ARGS);
 int update_YEST(UPDATE_FUNC_ARGS);
+int update_O2(UPDATE_FUNC_ARGS);
+int update_H2(UPDATE_FUNC_ARGS);
 
 int update_MISC(UPDATE_FUNC_ARGS);
 int update_legacy_PYRO(UPDATE_FUNC_ARGS);
@@ -432,7 +435,7 @@ static const part_type ptypes[PT_NUM] =
 	{"DESL",	PIXPACK(0x440000),	1.0f,	0.01f * CFDS,	0.98f,	0.95f,	0.0f,	0.1f,	0.0f,	0.0f	* CFDS,	2,	2,		0,	0,	5,	1,	15,		SC_LIQUID,		R_TEMP+0.0f	+273.15f,	42,		"Liquid. Explodes under high pressure and temperatures", ST_LIQUID, TYPE_LIQUID, NULL},
 	{"COAL",	PIXPACK(0x222222),	0.0f,   0.00f * CFDS,   0.90f,  0.00f,  0.0f,   0.0f,   0.0f,   0.0f	* CFDS, 0,	0,		0,	0,	20,	1,	100,	SC_SOLIDS,		R_TEMP+0.0f	+273.15f,	200,	"Solid. Burns slowly.", ST_SOLID, TYPE_SOLID, &update_COAL},
 	{"LO2",		PIXPACK(0x80A0EF),	0.6f,	0.01f * CFDS,	0.98f,	0.95f,	0.0f,	0.1f,	0.00f,	0.000f	* CFDS,	2,	5000,  	0,	0,	0,	1,	30,		SC_LIQUID,		80.0f,					70,		"Liquid Oxygen. Very cold. Reacts with fire", ST_LIQUID, TYPE_LIQUID, NULL},
-	{"O2",		PIXPACK(0x80A0FF),	2.0f,   0.00f * CFDS,   0.99f,	0.30f,	-0.1f,	0.0f,	3.0f,	0.000f	* CFDS,	0,	1000,  	0,	0,	0,	1,	1,		SC_GAS,		 	R_TEMP+0.0f	+273.15f,   70,		"Gas. Ignites easily.", ST_GAS, TYPE_GAS, NULL},
+	{"O2",		PIXPACK(0x80A0FF),	2.0f,   0.00f * CFDS,   0.99f,	0.30f,	-0.1f,	0.0f,	3.0f,	0.000f	* CFDS,	0,	0,  	0,	0,	0,	1,	1,		SC_GAS,		 	R_TEMP+0.0f	+273.15f,   70,		"Gas. Ignites easily.", ST_GAS, TYPE_GAS, &update_O2},
 	{"INWR",	PIXPACK(0x544141),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	1,	1,	1,	100,	SC_ELEC,		R_TEMP+0.0f	+273.15f,	251,	"Insulated Wire. Doesn't conduct to metal or semiconductors.", ST_SOLID, TYPE_SOLID|PROP_CONDUCTS, NULL},
 	{"YEST",	PIXPACK(0xEEE0C0),	0.7f,	0.02f * CFDS,	0.96f,	0.80f,	0.0f,	0.1f,	0.00f,	0.000f	* CFDS,	1,	15,		0,	0,	30,	1,	80,		SC_POWDERS,		R_TEMP+0.0f	+273.15f,	70,		"Yeast, grows when warm (~37C).", ST_SOLID, TYPE_PART, &update_YEST},
 	{"DYST",	PIXPACK(0xBBB0A0),	0.7f,	0.02f * CFDS,	0.96f,	0.80f,	0.0f,	0.1f,	0.00f,	0.000f	* CFDS,	1,	20,		0,	0,	30,	0,	80,		SC_POWDERS,		R_TEMP+0.0f	+273.15f,	70,		"Dead Yeast.", ST_SOLID, TYPE_PART, NULL},
@@ -447,7 +450,7 @@ static const part_type ptypes[PT_NUM] =
 	{"BCOL",	PIXPACK(0x333333),	0.4f,	0.04f * CFDS,	0.94f,	0.95f,	-0.1f,	0.3f,	0.00f,	0.000f	* CFDS,	1,	0,		0,	5,	2,	1,	90,		SC_POWDERS,		R_TEMP+0.0f	+273.15f,	150,	"Broken Coal. Heavy particles. See COAL", ST_SOLID, TYPE_PART, &update_BCOL},
 	{"PCLN",	PIXPACK(0x3B3B10),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	0,	1,	1,	100,	SC_ELEC,		R_TEMP+0.0f	+273.15f,	251,	"Solid. When activated, duplicates any particles it touches.", ST_NONE, TYPE_SOLID, &update_PCLN},
 	{"HSWC",	PIXPACK(0x3B1010),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	1,	1,	1,	100,	SC_ELEC,		R_TEMP+0.0f	+273.15f,	251,	"Heat switch. Conducts Heat only when activated", ST_NONE, TYPE_SOLID, &update_HSWC},
-	{"IRON",	PIXPACK(0x707070),	0.0f,	0.00f * CFDS,	0.90f,  0.00f,  0.0f,	0.0f,	0.00f,  0.000f	* CFDS, 0,	0,		0,	1,	50,	1,	100,	SC_CRACKER2,	R_TEMP+0.0f +273.15f,	251,	"Rusts with salt, can be used for electrolysis of WATR", ST_SOLID, TYPE_SOLID|PROP_CONDUCTS, &update_IRON},
+	{"IRON",	PIXPACK(0x707070),	0.0f,	0.00f * CFDS,	0.90f,  0.00f,  0.0f,	0.0f,	0.00f,  0.000f	* CFDS, 0,	0,		0,	1,	50,	1,	100,	SC_SOLIDS,		R_TEMP+0.0f +273.15f,	251,	"Rusts with salt, can be used for electrolysis of WATR", ST_SOLID, TYPE_SOLID|PROP_CONDUCTS|PROP_HOT_GLOW, &update_IRON},
 	{"MORT",	PIXPACK(0xE0E0E0),	0.0f,	0.00f * CFDS,	1.00f,	1.00f,	-0.99f,	0.0f,	0.01f,	0.002f	* CFDS,	0,	0,		0,	0,	0,	1,	-1,		SC_CRACKER2,	R_TEMP+4.0f	+273.15f,	60,		"Steam Train.", ST_NONE, TYPE_PART, &update_MORT},
 	{"GOL",		PIXPACK(0x0CAC00),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	0,	0,	1,	100,	SC_LIFE,		9000.0f,				40,		"Game Of Life! B3/S23", ST_NONE, TYPE_SOLID|PROP_LIFE, NULL},
 	{"HLIF",	PIXPACK(0xFF0000),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	0,	0,	1,	100,	SC_LIFE,		9000.0f,				40,		"High Life! B36/S23", ST_NONE, TYPE_SOLID|PROP_LIFE, NULL},
@@ -519,6 +522,7 @@ static const part_type ptypes[PT_NUM] =
 	{"FROG",	PIXPACK(0x00AA00),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	0,	0,	1,	100,	SC_LIFE,		9000.0f,				40,		"Frogs S12/B34/3", ST_NONE, TYPE_SOLID|PROP_LIFE, NULL},
 	{"BRAN",	PIXPACK(0xCCCC00),	0.0f,	0.00f * CFDS,	0.90f,	0.00f,	0.0f,	0.0f,	0.00f,	0.000f	* CFDS,	0,	0,		0,	0,	0,	1,	100,	SC_LIFE,		9000.0f,				40,		"Brian 6 S6/B246/3", ST_NONE, TYPE_SOLID|PROP_LIFE, NULL},
 	{"WIND",	PIXPACK(0x000000),  0.0f,	0.00f * CFDS,	0.90f,  0.00f,  0.0f,	0.0f,	0.00f,	0.000f  * CFDS,	0,  0,		0,  0,  0,  1,  100,	SC_SPECIAL,		0.0f,					40,		"Drag tool", ST_NONE, ST_NONE, NULL},
+	{"H2",		PIXPACK(0x5070FF),	2.0f,	0.00f * CFDS,	0.99f,	0.30f,	-0.10f,	0.00f,	3.00f,	0.000f	* CFDS, 0,  0,		0,	0,	0,	1,	1,		SC_GAS,			R_TEMP+0.0f +273.15f,	251,	"Combines with O2 to make WATR", ST_GAS, TYPE_GAS, &update_H2},
 	//Name		Colour				Advec	Airdrag			Airloss	Loss	Collid	Grav	Diffus	Hotair			Fal	Burn	Exp	Mel	Hrd	M	Weights	Section			H						Ins		Description
 };
 
@@ -681,7 +685,8 @@ static part_transition ptransitions[PT_NUM] =
 	/* GOL  */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT},
 	/* GOL  */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT},
 	/* GOL  */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT},
-	/* WIND */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT}, 
+	/* WIND */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT},
+	/* H2   */ {IPL,	NT,			IPH,	NT,			ITL,	NT,			ITH,	NT},
 };
 #undef IPL
 #undef IPH
@@ -809,43 +814,19 @@ static void create_gain_photon(int pp);
 
 void kill_part(int i);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline void part_change_type(int i, int x, int y, int t);
-#else
-extern inline void part_change_type(int i, int x, int y, int t);
-#endif
+void part_change_type(int i, int x, int y, int t);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline int create_part(int p, int x, int y, int t);
-#else
-extern inline int create_part(int p, int x, int y, int t);
-#endif
+int create_part(int p, int x, int y, int t);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline void delete_part(int x, int y);
-#else
-extern inline void delete_part(int x, int y);
-#endif
+void delete_part(int x, int y);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline int is_wire(int x, int y);
-#else
-extern inline int is_wire(int x, int y);
-#endif
+int is_wire(int x, int y);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline int is_wire_off(int x, int y);
-#else
-extern inline int is_wire_off(int x, int y);
-#endif
+int is_wire_off(int x, int y);
 
 void set_emap(int x, int y);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline int parts_avg(int ci, int ni, int t);
-#else
-extern int parts_avg(int ci, int ni, int t);
-#endif
+int parts_avg(int ci, int ni, int t);
 
 int nearest_part(int ci, int t);
 
@@ -864,20 +845,11 @@ int flood_parts(int x, int y, int c, int cm, int bm);
 int create_parts(int x, int y, int rx, int ry, int c);
 
 void create_line(int x1, int y1, int x2, int y2, int rx, int ry, int c);
+
 void *transform_save(void *odata, int *size, matrix2d transform, vector2d translate);
 
+void orbitalparts_get(int block1, int block2, int resblock1[], int resblock2[]);
 
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline void orbitalparts_get(int block1, int block2, int resblock1[], int resblock2[]);
-#else
-extern inline void orbitalparts_get(int block1, int block2, int resblock1[], int resblock2[]);
-#endif
-
-
-#if defined(WIN32) && !defined(__GNUC__)
-extern _inline void orbitalparts_set(int *block1, int *block2, int resblock1[], int resblock2[]);
-#else
-extern inline void orbitalparts_set(int *block1, int *block2, int resblock1[], int resblock2[]);
-#endif
+void orbitalparts_set(int *block1, int *block2, int resblock1[], int resblock2[]);
 
 #endif

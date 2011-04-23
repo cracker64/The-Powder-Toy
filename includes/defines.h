@@ -8,9 +8,9 @@
 #endif
 
 #define SAVE_VERSION 47
-#define MINOR_VERSION 0
+#define MINOR_VERSION 4
 #define IDENT_VERSION "G" //Change this if you're not Simon! It should be a single letter.
-#define BETA
+//#define BETA
 
 #define SERVER "powdertoy.co.uk"
 
@@ -21,13 +21,21 @@
 #ifndef M_PI
 #define M_PI 3.14159265f
 #endif
+#ifndef M_GRAV
+#define M_GRAV 6.67300e-1
+#endif
 
 #define IMGCONNS 3
 #define TIMEOUT 100
 #define HTTP_TIMEOUT 10
 
+#ifdef RENDERER
+#define MENUSIZE 0
+#define BARSIZE 0
+#else
 #define MENUSIZE 40
 #define BARSIZE 17
+#endif
 #define XRES	612
 #define YRES	384
 #define NPART XRES*YRES
@@ -63,7 +71,7 @@ extern unsigned char ZSIZE;
 
 #define STAMP_X 4
 #define STAMP_Y 4
-#define STAMP_MAX 120
+#define STAMP_MAX 240
 
 #define NGOL 25
 
@@ -71,10 +79,9 @@ extern unsigned char ZSIZE;
 #define SQUARE_BRUSH 1
 #define BRUSH_NUM 2
 
-#define PYCONSOLE
-#define PYEXT
-//WARNING pyext must be defined on 64bit!
-//also, don't add a comment on that line, it breaks
+//#define PYCONSOLE
+//#define PYEXT
+//no longer needed
 
 #ifdef PIX16
 typedef unsigned short pixel;
@@ -138,6 +145,7 @@ struct stamp
 };
 typedef struct stamp stamp;
 
+int frameidx;
 int MSIGN;
 int CGOL;
 int ISGOL;
