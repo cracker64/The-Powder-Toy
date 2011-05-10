@@ -14,9 +14,8 @@
 #include <powder.h>
 #include <interface.h>
 #include <misc.h>
+#include <console.h>
 
-
-//char pyready=1;
 SDLMod sdl_mod;
 int sdl_key, sdl_wheel, sdl_caps=0, sdl_ascii, sdl_zoom_trig=0;
 
@@ -592,16 +591,16 @@ void draw_svf_ui(pixel *vid_buf)// all the buttons at the bottom
 		drawrect(vid_buf, XRES-16+BARSIZE/*494*/, YRES+(MENUSIZE-16), 14, 14, 255, 255, 255, 255);
 	}
 
-	//the heat sim button
-	if (!legacy_enable)
+	//The simulation options button, used to be the heat sim button
+	/*if (!legacy_enable)
 	{
-		fillrect(vid_buf, XRES-160+BARSIZE/*493*/, YRES+(MENUSIZE-17), 16, 16, 255, 255, 255, 255);
-		drawtext(vid_buf, XRES-154+BARSIZE/*481*/, YRES+(MENUSIZE-13), "\xBE", 255, 0, 0, 255);
-		drawtext(vid_buf, XRES-154+BARSIZE/*481*/, YRES+(MENUSIZE-13), "\xBD", 0, 0, 0, 255);
+		fillrect(vid_buf, XRES-160+BARSIZE, YRES+(MENUSIZE-17), 16, 16, 255, 255, 255, 255);
+		drawtext(vid_buf, XRES-154+BARSIZE, YRES+(MENUSIZE-13), "\xBE", 255, 0, 0, 255);
+		drawtext(vid_buf, XRES-154+BARSIZE, YRES+(MENUSIZE-13), "\xBD", 0, 0, 0, 255);
 	}
-	else
+	else*/
 	{
-		drawtext(vid_buf, XRES-154+BARSIZE/*481*/, YRES+(MENUSIZE-13), "\xBD", 255, 255, 255, 255);
+		drawtext(vid_buf, XRES-154+BARSIZE/*481*/, YRES+(MENUSIZE-13), "\xBD", 255, 255, 255, 255); //TODO: More suitable icon
 		drawrect(vid_buf, XRES-159+BARSIZE/*494*/, YRES+(MENUSIZE-16), 14, 14, 255, 255, 255, 255);
 	}
 
@@ -4204,78 +4203,6 @@ char *console_ui(pixel *vid_buf,char error[255],char console_more) {
 	return NULL;
 }
 
-//takes a a string and compares it to element names, and puts it value into element.
-int console_parse_type(char *txt, int *element, char *err)
-{
-	int i = -1;
-	// alternative names for some elements
-	if (strcasecmp(txt,"C4")==0) i = PT_PLEX;
-	else if (strcasecmp(txt,"C5")==0) i = PT_C5;
-	else if (strcasecmp(txt,"NONE")==0) i = PT_NONE;
-	if (i>=0)
-	{
-		*element = i;
-		strcpy(err,"");
-		return 1;
-	}
-	for (i=1; i<PT_NUM; i++) {
-		if (strcasecmp(txt,ptypes[i].name)==0)
-		{
-			*element = i;
-			strcpy(err,"");
-			return 1;
-		}
-	}
-	strcpy(err, "Particle type not recognised");
-	return 0;
-}
-//takes a string of coords "x,y" and puts the values into x and y.
-int console_parse_coords(char *txt, int *x, int *y, char *err)
-{
-	// TODO: use regex?
-	int nx = -1, ny = -1;
-	if (sscanf(txt,"%d,%d",&nx,&ny)!=2 || nx<0 || nx>=XRES || ny<0 || ny>=YRES)
-	{
-		strcpy(err,"Invalid coordinates");
-		return 0;
-	}
-	*x = nx;
-	*y = ny;
-	return 1;
-}
-//takes a string of either coords or a particle number, and puts the particle number into *which
-int console_parse_partref(char *txt, int *which, char *err)
-{
-	int i = -1, nx, ny;
-	strcpy(err,"");
-	// TODO: use regex?
-	if (strchr(txt,',') && console_parse_coords(txt, &nx, &ny, err))
-	{
-		i = pmap[ny][nx];
-		if (!i || (i>>8)>=NPART)
-			i = -1;
-		else
-			i = i>>8;
-	}
-	else if (txt)
-	{
-		char *num = (char*)malloc(strlen(txt)+3);
-		i = atoi(txt);
-		sprintf(num,"%d",i);
-		if (!txt || strcmp(txt,num)!=0)
-			i = -1;
-		free(num);
-	}
-	if (i>=0 && i<NPART && parts[i].type)
-	{
-		*which = i;
-		strcpy(err,"");
-		return 1;
-	}
-	if (strcmp(err,"")==0) strcpy(err,"Particle does not exist");
-	return 0;
-}
-
 void decorations_ui(pixel *vid_buf,pixel *decorations,int *bsx,int *bsy)
 {
 	int i,ss,hh,vv,cr=127,cg=0,cb=0,b = 0,mx,my,bq = 0,j, lb=0,lx=0,ly=0,lm=0;
@@ -4573,4 +4500,80 @@ void decorations_ui(pixel *vid_buf,pixel *decorations,int *bsx,int *bsy)
 		}
 	}
 	free(old_buf);
+}
+
+void simulation_ui(pixel * vid_buf)
+{
+	int xsize = 300;
+	int ysize = 100;
+	int x0=(XRES-xsize)/2,y0=(YRES-MENUSIZE-ysize)/2,b=1,bq,mx,my;
+	ui_checkbox cb;
+	ui_checkbox cb2;
+
+	cb.x = x0+xsize-16;
+	cb.y = y0+23;
+	cb.focus = 0;
+	cb.checked = !legacy_enable;
+
+	cb2.x = x0+xsize-16;
+	cb2.y = y0+51;
+	cb2.focus = 0;
+	cb2.checked = ngrav_enable;
+
+	while (!sdl_poll())
+	{
+		b = SDL_GetMouseState(&mx, &my);
+		if (!b)
+			break;
+	}
+
+	while (!sdl_poll())
+	{
+		bq = b;
+		b = SDL_GetMouseState(&mx, &my);
+		mx /= sdl_scale;
+		my /= sdl_scale;
+
+		clearrect(vid_buf, x0-2, y0-2, xsize+4, ysize+4);
+		drawrect(vid_buf, x0, y0, xsize, ysize, 192, 192, 192, 255);
+		drawtext(vid_buf, x0+8, y0+8, "Simulation options", 255, 216, 32, 255);
+
+		drawtext(vid_buf, x0+8, y0+26, "Heat simulation", 255, 255, 255, 255);
+		drawtext(vid_buf, x0+12+textwidth("Heat simulation"), y0+26, "Introduced in version 34.", 255, 255, 255, 180);
+		drawtext(vid_buf, x0+12, y0+40, "Older saves may behave oddly with this enabled.", 255, 255, 255, 180);
+
+		drawtext(vid_buf, x0+8, y0+54, "Newtonian gravity", 255, 255, 255, 255);
+		drawtext(vid_buf, x0+12+textwidth("Newtonian gravity"), y0+54, "Introduced in version 48.", 255, 255, 255, 180);
+		drawtext(vid_buf, x0+12, y0+68, "May also cause slow performance on older computers", 255, 255, 255, 180);
+
+		//TODO: Options for Air and Normal gravity
+		//Maybe save/load defaults too.
+
+		drawtext(vid_buf, x0+5, y0+ysize-11, "OK", 255, 255, 255, 255);
+		drawrect(vid_buf, x0, y0+ysize-16, xsize, 16, 192, 192, 192, 255);
+
+		ui_checkbox_draw(vid_buf, &cb);
+		ui_checkbox_draw(vid_buf, &cb2);
+		sdl_blit(0, 0, (XRES+BARSIZE), YRES+MENUSIZE, vid_buf, (XRES+BARSIZE));
+		ui_checkbox_process(mx, my, b, bq, &cb);
+		ui_checkbox_process(mx, my, b, bq, &cb2);
+
+		if (b && !bq && mx>=x0 && mx<x0+xsize && my>=y0+ysize-16 && my<=y0+ysize)
+			break;
+
+		if (sdl_key==SDLK_RETURN)
+			break;
+		if (sdl_key==SDLK_ESCAPE)
+			break;
+	}
+
+	legacy_enable = !cb.checked;
+	ngrav_enable = cb2.checked;
+
+	while (!sdl_poll())
+	{
+		b = SDL_GetMouseState(&mx, &my);
+		if (!b)
+			break;
+	}
 }

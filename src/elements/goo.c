@@ -9,5 +9,6 @@ int update_GOO(UPDATE_FUNC_ARGS) {
 		parts[i].vx += advection*vx[y/CELL][x/CELL];
 		parts[i].vy += advection*vy[y/CELL][x/CELL];
 	}
+	gravmap[y/CELL][x/CELL] += 1.0f;
 	return 0;
 }
