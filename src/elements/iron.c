@@ -21,6 +21,5 @@ int update_IRON(UPDATE_FUNC_ARGS) {
 					parts[i].tmp=(rand()/(RAND_MAX/10))+20;
 				}
 			}
-	gravmap[y/CELL][x/CELL] -= 1.0f;
 	return 0;
 }
