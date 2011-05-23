@@ -22,6 +22,7 @@ int sdl_key, sdl_wheel, sdl_caps=0, sdl_ascii, sdl_zoom_trig=0;
 char *shift_0="`1234567890-=[]\\;',./";
 char *shift_1="~!@#$%^&*()_+{}|:\"<>?";
 
+int svf_messages = 0;
 int svf_login = 0;
 int svf_admin = 0;
 int svf_mod = 0;
@@ -1005,26 +1006,33 @@ void login_ui(pixel *vid_buf)
 	}
 	if (res && !strncmp(res, "OK ", 3))
 	{
-		char *s_id,*u_e,*nres;
-		printf("{%s}\n", res);
+		char *s_id,*u_e,*nres,*u_m,*mres;
 		s_id = strchr(res+3, ' ');
 		if (!s_id)
 			goto fail;
 		*(s_id++) = 0;
 
 		u_e = strchr(s_id, ' ');
-		if (!u_e) {
-			u_e = malloc(1);
-			memset(u_e, 0, 1);
+		if (!u_e)
+			goto fail;
+		*(u_e++) = 0;
+			
+		u_m = strchr(u_e, ' ');
+		if (!u_m) {
+			u_m = malloc(1);
+			memset(u_m, 0, 1);
 		}
 		else
-			*(u_e++) = 0;
+			*(u_m++) = 0;
 
 		strcpy(svf_user_id, res+3);
 		strcpy(svf_session_id, s_id);
-		nres = mystrdup(u_e);
+		mres = mystrdup(u_e);
+		nres = mystrdup(u_m);
 
-		printf("{%s} {%s} {%s}\n", svf_user_id, svf_session_id, nres);
+		#ifdef DEBUG
+		printf("{%s} {%s} {%s} {%s}\n", svf_user_id, svf_session_id, nres, mres);
+		#endif
 
 		if (!strncmp(nres, "ADMIN", 5))
 		{
@@ -1041,6 +1049,7 @@ void login_ui(pixel *vid_buf)
 			svf_admin = 0;
 			svf_mod = 0;
 		}
+		svf_messages = atoi(mres);
 		free(res);
 		svf_login = 1;
 		return;
@@ -1059,6 +1068,7 @@ fail:
 	svf_own = 0;
 	svf_admin = 0;
 	svf_mod = 0;
+	svf_messages = 0;
 }
 
 int stamp_ui(pixel *vid_buf)
@@ -1718,14 +1728,14 @@ void menu_ui_v3(pixel *vid_buf, int i, int *sl, int *sr, int *dae, int b, int bq
 	{
 		for (n = UI_WALLSTART; n<UI_WALLSTART+UI_WALLCOUNT; n++)
 		{
-			if (n!=SPC_AIR&&n!=SPC_HEAT&&n!=SPC_COOL&&n!=SPC_VACUUM)
+			if (n!=SPC_AIR&&n!=SPC_HEAT&&n!=SPC_COOL&&n!=SPC_VACUUM&&n!=SPC_WIND)
 			{
 				/*if (x-18<=2)
 				{
 					x = XRES-BARSIZE-18;
 					y += 19;
 				}*/
-				x -= draw_tool_xy(vid_buf, x, y, n, mwalls[n-UI_WALLSTART].colour)+5;
+				x -= draw_tool_xy(vid_buf, x, y, n, wtypes[n-UI_WALLSTART].colour)+5;
 				if (!bq && mx>=x+32 && mx<x+58 && my>=y && my< y+15)
 				{
 					drawrect(vid_buf, x+30, y-1, 29, 17, 255, 55, 55, 255);
@@ -1755,14 +1765,14 @@ void menu_ui_v3(pixel *vid_buf, int i, int *sl, int *sr, int *dae, int b, int bq
 	{
 		for (n = UI_WALLSTART; n<UI_WALLSTART+UI_WALLCOUNT; n++)
 		{
-			if (n==SPC_AIR||n==SPC_HEAT||n==SPC_COOL||n==SPC_VACUUM)
+			if (n==SPC_AIR||n==SPC_HEAT||n==SPC_COOL||n==SPC_VACUUM||n==SPC_WIND)
 			{
 				/*if (x-18<=0)
 				{
 					x = XRES-BARSIZE-18;
 					y += 19;
 				}*/
-				x -= draw_tool_xy(vid_buf, x, y, n, mwalls[n-UI_WALLSTART].colour)+5;
+				x -= draw_tool_xy(vid_buf, x, y, n, wtypes[n-UI_WALLSTART].colour)+5;
 				if (!bq && mx>=x+32 && mx<x+58 && my>=y && my< y+15)
 				{
 					drawrect(vid_buf, x+30, y-1, 29, 17, 255, 55, 55, 255);
@@ -1869,7 +1879,7 @@ void menu_ui_v3(pixel *vid_buf, int i, int *sl, int *sr, int *dae, int b, int bq
 	}
 	else if (i==SC_WALL||(i==SC_SPECIAL&&h>=UI_WALLSTART))
 	{
-		drawtext(vid_buf, XRES-textwidth((char *)mwalls[h-UI_WALLSTART].descs)-BARSIZE, sy-10, (char *)mwalls[h-UI_WALLSTART].descs, 255, 255, 255, 255);
+		drawtext(vid_buf, XRES-textwidth((char *)wtypes[h-UI_WALLSTART].descs)-BARSIZE, sy-10, (char *)wtypes[h-UI_WALLSTART].descs, 255, 255, 255, 255);
 	}
 	else
 	{
@@ -3290,7 +3300,7 @@ int open_ui(pixel *vid_buf, char *save_id, char *save_date)
 		if (queue_open) {
 			if (info_ready && data_ready) {
 				// Do Open!
-				status = parse_save(data, data_size, 1, 0, 0, bmap, fvx, fvy, signs, parts, pmap);
+				status = parse_save(data, data_size, 1, 0, 0, bmap, fvx, fvy, signs, parts, pmap, decorations);
 				if (!status) {
 					//if(svf_last)
 					//free(svf_last);
@@ -3811,7 +3821,7 @@ void execute_save(pixel *vid_buf)
 	plens[0] = strlen(svf_name);
 	uploadparts[1] = svf_description;
 	plens[1] = strlen(svf_description);
-	uploadparts[2] = build_save(plens+2, 0, 0, XRES, YRES, bmap, fvx, fvy, signs, parts);
+	uploadparts[2] = build_save(plens+2, 0, 0, XRES, YRES, bmap, fvx, fvy, signs, parts, decorations);
 	uploadparts[3] = build_thumb(plens+3, 1);
 	uploadparts[4] = (svf_publish==1)?"Public":"Private";
 	plens[4] = strlen((svf_publish==1)?"Public":"Private");
@@ -4559,10 +4569,13 @@ void decorations_ui(pixel *vid_buf,pixel *decorations,int *bsx,int *bsy)
 void simulation_ui(pixel * vid_buf)
 {
 	int xsize = 300;
-	int ysize = 100;
+	int ysize = 140;
 	int x0=(XRES-xsize)/2,y0=(YRES-MENUSIZE-ysize)/2,b=1,bq,mx,my;
+	int new_scale, new_kiosk;
 	ui_checkbox cb;
 	ui_checkbox cb2;
+	ui_checkbox cb3;
+	ui_checkbox cb4;
 
 	cb.x = x0+xsize-16;
 	cb.y = y0+23;
@@ -4573,6 +4586,16 @@ void simulation_ui(pixel * vid_buf)
 	cb2.y = y0+51;
 	cb2.focus = 0;
 	cb2.checked = ngrav_enable;
+	
+	cb3.x = x0+xsize-16;
+	cb3.y = y0+77;
+	cb3.focus = 0;
+	cb3.checked = (sdl_scale==2)?1:0;
+	
+	cb4.x = x0+xsize-16;
+	cb4.y = y0+103;
+	cb4.focus = 0;
+	cb4.checked = (kiosk_enable==1)?1:0;
 
 	while (!sdl_poll())
 	{
@@ -4599,6 +4622,13 @@ void simulation_ui(pixel * vid_buf)
 		drawtext(vid_buf, x0+8, y0+54, "Newtonian gravity", 255, 255, 255, 255);
 		drawtext(vid_buf, x0+12+textwidth("Newtonian gravity"), y0+54, "Introduced in version 48.", 255, 255, 255, 180);
 		drawtext(vid_buf, x0+12, y0+68, "May also cause slow performance on older computers", 255, 255, 255, 180);
+		
+		drawtext(vid_buf, x0+8, y0+80, "Large window", 255, 255, 255, 255);
+		drawtext(vid_buf, x0+12+textwidth("Large window"), y0+80, "Double window size for small screens", 255, 255, 255, 180);
+		//drawtext(vid_buf, x0+12, y0+68, "May also cause slow performance on older computers", 255, 255, 255, 180);
+		
+		drawtext(vid_buf, x0+8, y0+106, "Fullscreen", 255, 255, 255, 255);
+		drawtext(vid_buf, x0+12+textwidth("Fullscreen"), y0+106, "Fill the entire screen", 255, 255, 255, 180);
 
 		//TODO: Options for Air and Normal gravity
 		//Maybe save/load defaults too.
@@ -4608,9 +4638,13 @@ void simulation_ui(pixel * vid_buf)
 
 		ui_checkbox_draw(vid_buf, &cb);
 		ui_checkbox_draw(vid_buf, &cb2);
+		ui_checkbox_draw(vid_buf, &cb3);
+		ui_checkbox_draw(vid_buf, &cb4);
 		sdl_blit(0, 0, (XRES+BARSIZE), YRES+MENUSIZE, vid_buf, (XRES+BARSIZE));
 		ui_checkbox_process(mx, my, b, bq, &cb);
 		ui_checkbox_process(mx, my, b, bq, &cb2);
+		ui_checkbox_process(mx, my, b, bq, &cb3);
+		ui_checkbox_process(mx, my, b, bq, &cb4);
 
 		if (b && !bq && mx>=x0 && mx<x0+xsize && my>=y0+ysize-16 && my<=y0+ysize)
 			break;
@@ -4622,7 +4656,17 @@ void simulation_ui(pixel * vid_buf)
 	}
 
 	legacy_enable = !cb.checked;
-	ngrav_enable = cb2.checked;
+	new_scale = (cb3.checked)?2:1;
+	new_kiosk = (cb4.checked)?1:0;
+	if(new_scale!=sdl_scale || new_kiosk!=kiosk_enable)
+		set_scale(new_scale, new_kiosk);	
+	if(ngrav_enable != cb2.checked)
+	{
+		if(cb2.checked)
+			start_grav_async();
+		else
+			stop_grav_async();
+	}
 
 	while (!sdl_poll())
 	{

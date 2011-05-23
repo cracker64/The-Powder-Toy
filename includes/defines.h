@@ -7,10 +7,10 @@
 #define PATH_SEP "/"
 #endif
 
-#define SAVE_VERSION 47
-#define MINOR_VERSION 4
+#define SAVE_VERSION 48
+#define MINOR_VERSION 2
 #define IDENT_VERSION "G" //Change this if you're not Simon! It should be a single letter.
-//#define BETA
+#define BETA
 
 #define SERVER "powdertoy.co.uk"
 
@@ -187,7 +187,7 @@ extern int sys_pause;
 extern int sys_shortcuts;
 extern int legacy_enable; //Used to disable new features such as heat, will be set by commandline or save.
 extern int death, death2, framerender;
-extern pixel *vid_buf;
+extern pixel *vid_buf, *decorations;
 
 extern unsigned char last_major, last_minor, update_flag;
 
@@ -198,10 +198,13 @@ void thumb_cache_inval(char *id);
 void thumb_cache_add(char *id, void *thumb, int size);
 int thumb_cache_find(char *id, void **thumb, int *size);
 void *build_thumb(int *size, int bzip2);
-void *build_save(int *size, int x0, int y0, int w, int h, unsigned char bmap[YRES/CELL][XRES/CELL], float fvx[YRES/CELL][XRES/CELL], float fvy[YRES/CELL][XRES/CELL], sign signs[MAXSIGNS], void* partsptr);
-int parse_save(void *save, int size, int replace, int x0, int y0, unsigned char bmap[YRES/CELL][XRES/CELL], float fvx[YRES/CELL][XRES/CELL], float fvy[YRES/CELL][XRES/CELL], sign signs[MAXSIGNS], void* partsptr, unsigned pmap[YRES][XRES]);
+void *build_save(int *size, int x0, int y0, int w, int h, unsigned char bmap[YRES/CELL][XRES/CELL], float fvx[YRES/CELL][XRES/CELL], float fvy[YRES/CELL][XRES/CELL], sign signs[MAXSIGNS], void* partsptr, pixel *decorations);
+int parse_save(void *save, int size, int replace, int x0, int y0, unsigned char bmap[YRES/CELL][XRES/CELL], float fvx[YRES/CELL][XRES/CELL], float fvy[YRES/CELL][XRES/CELL], sign signs[MAXSIGNS], void* partsptr, unsigned pmap[YRES][XRES], pixel *decorations);
 void clear_sim(void);
 void del_stamp(int d);
 void sdl_seticon(void);
 void play_sound(char *file);
+void start_grav_async(void);
+void stop_grav_async(void);
+void set_scale(int scale, int kiosk);
 #endif

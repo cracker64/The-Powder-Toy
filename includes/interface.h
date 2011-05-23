@@ -19,29 +19,6 @@ struct menu_wall
 };
 typedef struct menu_wall menu_wall;
 
-static menu_wall mwalls[] =
-{
-	{PIXPACK(0xC0C0C0), "Wall. Indestructible. Blocks everything. Conductive."},
-	{PIXPACK(0x808080), "E-Wall. Becomes transparent when electricity is connected."},
-	{PIXPACK(0xFF8080), "Detector. Generates electricity when a particle is inside."},
-	{PIXPACK(0x808080), "Streamline. Set start point of a streamline."},
-	{PIXPACK(0x808080), "Sign. Click on a sign to edit it or anywhere else to place a new one."},
-	{PIXPACK(0x8080FF), "Fan. Accelerates air. Use line tool to set direction and strength."},
-	{PIXPACK(0xC0C0C0), "Wall. Blocks most particles but lets liquids through. Conductive."},
-	{PIXPACK(0x808080), "Wall. Absorbs particles but lets air currents through."},
-	{PIXPACK(0x808080), "Erases walls."},
-	{PIXPACK(0x808080), "Wall. Indestructible. Blocks everything."},
-	{PIXPACK(0x3C3C3C), "Wall. Indestructible. Blocks particles, allows air"},
-	{PIXPACK(0x575757), "Wall. Indestructible. Blocks liquids and gasses, allows solids"},
-	{PIXPACK(0xFFFF22), "Conductor, allows particles, conducts electricity"},
-	{PIXPACK(0x242424), "E-Hole, absorbs particles, release them when powered"},
-	{PIXPACK(0xFFFFFF), "Air, creates airflow and pressure"},
-	{PIXPACK(0xFFBB00), "Heats the targetted element."},
-	{PIXPACK(0x00BBFF), "Cools the targetted element."},
-	{PIXPACK(0x303030), "Vacuum, reduces air pressure."},
-	{PIXPACK(0x579777), "Wall. Indestructible. Blocks liquids and solids, allows gasses"},
-};
-
 #define SC_WALL 0
 #define SC_SPECIAL 8
 #define SC_POWDERS 5
@@ -139,6 +116,7 @@ extern SDLMod sdl_mod;
 extern int sdl_key, sdl_wheel, sdl_caps, sdl_ascii, sdl_zoom_trig;
 extern char *shift_0;
 extern char *shift_1;
+extern int svf_messages;
 extern int svf_login;
 extern int svf_admin;
 extern int svf_mod;
